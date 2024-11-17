@@ -2,7 +2,6 @@
 //Date: 15/11/24
 //Purpose: Assignment 2
 
-//TODO: Add other creative ideas
 
 /* VARIABLE DECLARATIONS */
 
@@ -12,6 +11,9 @@ var speed, speedBtn, canvasMenu;
 var testAudio;
 var SETU_logo;
 var frameCount;
+var yLevel, platformWidth, platformHeight, treeArray, treeDisplayArray, treeBuffer;
+
+const platformSize = [300, 400, 500, 600, 700, 800];
 
 
 /* DEFAULT FUNCTIONS */
@@ -51,6 +53,20 @@ function setup() {
   circleSize=100;
   speed = 5;
   frameCount = 1;
+  SETU_logo = SETU_dark_logo;
+
+
+  // REGENERATE TREES BUTTON
+  generateTreeValues();
+  regenDiv = createDiv(''); //container to have slider and label beside each other in menu
+  regenIcon = createImg('images/tree-icon.png'); //icon beside button
+  regenBtn = createButton('Regenerate trees'); //button
+  regenBtn.mouseClicked(generateTreeValues);
+
+
+  regenDiv.child(regenIcon); //move element into div
+  regenDiv.child(regenBtn) //move element into div
+  canvasMenu.child(regenDiv); //move to the menu
 
   // TEST AUDIO
   testAudio = createButton('Test Audio');
@@ -68,11 +84,20 @@ function setup() {
 function draw() {
   // FRAME COUNT
   frameCount++; 
-  console.log('Frame count: '+frameCount);
+  //console.log('Frame count: '+frameCount);
 
   // SLIDER VALUE == BACKGROUND
   bgColour = bgSlider.value(); //get value from slider
   background(bgColour); //uses slider value as greyscale colour value for bg
+  
+  // FRAME TRACKER
+  textSize(24);
+  textStyle(NORMAL);
+  text(Math.ceil(mouseX)+' '+Math.ceil(mouseY), 20,780); //Math.ceil() rounds float to nearest integer
+
+  // TREE GENERATOR
+  //treesTest(); //uncomment to see my tree objects!
+  generateTrees();
   noStroke();
 
   // CHANGES ELEMENTS TO WHITE IF BACKGROUND TOO DARK
@@ -87,6 +112,7 @@ function draw() {
   // IMAGES
   image(SETU_logo, 20,0, 150,150); //SETU LOGO
   image(pfp, width-165,10, 150,150); //PROFILE IMAGE
+
 
   // CIRCLE
   onHoverCircle(); //sets fill colour to random on hover
@@ -112,18 +138,6 @@ function keyPressed() {
     moveRight();
   }
 } //end keyPressed()
-
-
-function doubleClicked(event) {
-  //if ((mouseX<=circleX+(circleSize/2)) && (mouseX>=circleX-(circleSize/2)) && (mouseY<=circleY+(circleSize/2)) && (mouseY>=circleY-(circleSize/2))) {
-  if ((mouseX<=width) && (mouseX>=width-150) && (mouseY<=160) && (mouseY>=10)) {
-    print('yes');
-    rect(100,100,100,100);
-  }
-
-  //check if working
-  console.log(event);
-} //end doubleClicked() 
 
 
 function moveRight() {
@@ -172,9 +186,8 @@ function moveDown() {
 
 function onHoverCircle() {
   if ((mouseX<=circleX+(circleSize/2)) && (mouseX>=circleX-(circleSize/2)) && (mouseY<=circleY+(circleSize/2)) && (mouseY>=circleY-(circleSize/2))) {
-    print('boundary');
-    fill(random(255),random(255),random(255));
-    frameChecker(200, playHoverSound); //very 15 seconds, plays sound - added to reduce lag
+    fill(random(255),random(255),random(255));//randomises colour
+    frameChecker(200, playHoverSound); //every 15 seconds, plays sound - added to reduce lag
   } //end if
 } //end onHoverCircle()
 
@@ -191,29 +204,102 @@ function Speedy() {
 } //end Speedy()
 
 
+// UTILITIES FUNCTIONS 
 function playSound(soundFile) {
   if (soundFile.isLooping()) {
     soundFile.stop();
-    print('sound stopped');
+    print('Sound stopped.');
   } else if ((soundFile == testSound) && (soundFile.isPlaying())) {
     soundFile.stop();
-    print('sound stopped');
+    print('Sound stopped.');
   } else {
     soundFile.play();
-    print('sound playing...');
+    print('Sound playing...');
   }
-}
+} //end playSound()
 
 function playHoverSound() {
   playSound(hoverSound);
-}
+} //end playHoverSound()
 function playTestSound() {
   playSound(testSound);
-}
+} //end playTestSound()
 
 
 function frameChecker(x,func) {
   if (frameCount % x) {
     func();
   }
-}
+} //end frameChecker()
+
+
+//must use different technique to get random colour from a range, e.g. for random colour of yellow in windows
+function randomFromRange(min, max) {
+  /**returns random value between 0-1 multiplied by max/min input
+    Math.floor converts float to nearest integer
+    '+ min' allows both min and max to be included in random output **/
+
+  return Math.floor(Math.random() * (max-min +1)) + min;
+  
+} //end randomFromRange()
+
+
+// ADDITIONS
+
+function treesTest() {
+  var tree1 = new Spruce(500,500);
+  tree1.display();
+  var tree2 = new Oak(200,500);
+  tree2.display();
+  var tree3 = new Cypress(350,500);
+  tree3.display();
+  var tree4 = new Redwood(650,500);
+  tree4.display();
+} //end treesTest()
+
+function generateTrees() {
+  fill('#4f3e28');
+  triangle(((width-platformWidth)/2),yLevel+5, (width/2),(yLevel+5+platformHeight), (width-(width-platformWidth)/2),yLevel+5); //island size from random values
+  fill('#667c2c');
+  rect(((width-platformWidth)/2)-2,yLevel, width-(width-platformWidth)+2, 10, 15); //grass on island
+
+  treeDisplayArray.forEach(tree => tree.display()); //display each
+} //end generateTrees()
+
+function generateTreeValues() {
+  // INITIAL VALUES
+  yLevel = randomFromRange(300,700);
+  platformWidth = platformSize[Math.floor(Math.random() * platformSize.length)]; //random from array
+  platformHeight = randomFromRange(30,120);
+  treeArray = []; //codes for types of tree
+  treeDisplayArray = [];
+  treeBuffer = 100;
+
+  // DISPLAY STATS
+  print('Island size: '+platformWidth);
+  print('Trees possible: '+((platformWidth-100)/100));
+
+  // ASSIGN TREE TYPES
+  for (var i=0; i<((platformWidth-100)/100); i++) {
+    treeArray[i] = randomFromRange(0,3); //pick one of 4 tree object options
+  } //end for
+  
+  // ASSIGN TREE OBJECTS AND CO-ORDS
+  for (i in treeArray) {
+    let startX = (width - platformWidth) / 2 + treeBuffer;
+    if (treeArray[i] === 0) {
+      treeDisplayArray.push(new Spruce(startX, yLevel));
+    } else if (treeArray[i] === 1) {
+      treeDisplayArray.push(new Oak(startX, yLevel));
+    } else if (treeArray[i] === 2) {
+      treeDisplayArray.push(new Cypress(startX, yLevel));
+    } else if (treeArray[i] === 3) {
+      treeDisplayArray.push(new Redwood(startX, yLevel));
+    } //end if
+    treeBuffer += 100; // Increase buffer for next tree
+  } //end for
+  
+  // DISPLAY TREE TYPES
+  //print(treeArray); //tree types as values 0-3
+  print(treeDisplayArray);
+} //end generateTreeValues()

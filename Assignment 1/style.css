@@ -1,0 +1,12 @@
+html, body {
+  margin: 0;
+  padding: 0;
+}
+main {
+  margin-top: 20pt;
+  display: flex;
+  justify-content: center;
+}
+canvas {
+  display: block;
+}
